@@ -7,8 +7,10 @@ use sal_server::SalServer;
 fn main() {
 
     let port = env::var("PORT").unwrap_or(String::from("8888"));
-    let mut addr = String::from("0.0.0.0");
+    let mut addr = String::from("0.0.0.0:");
     let _ = addr.push_str(port.as_str());
+
+    println!("Addr: {}", addr);
 
     let serv = SalServer::new(&addr, 8);
     serv.route_http(route);
