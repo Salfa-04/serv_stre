@@ -1,10 +1,16 @@
 mod sal_server;
-use std::collections::HashMap;
 
+use std::collections::HashMap;
+use std::env;
 use sal_server::SalServer;
 
 fn main() {
-    let serv = SalServer::new("0.0.0.0:8888", 8);
+
+    let port = env::var("PORT").unwrap_or(String::from("8888"));
+    let mut addr = String::from("0.0.0.0");
+    let _ = addr.push_str(port.as_str());
+
+    let serv = SalServer::new(&addr, 8);
     serv.route_http(route);
     println!("Hello, world!");
 }
