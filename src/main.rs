@@ -1,49 +1,41 @@
 mod sal_server;
 
-use std::{collections::HashMap, env};
 use sal_server::SalServer;
+use std::collections::HashMap;
+use std::env::var;
 
 fn main() {
 
-    let port = env::var("PORT").unwrap();
-    let mut addr = String::from("0.0.0.0:");
-    addr.push_str(port.as_str());
-
-    SalServer::new(&addr, 8).route_pro(route_pro);
+    let port = var("PORT").expect("$PORT Not Found").parse();
+    SalServer::new(("0.0.0.0", port.unwrap_or(8888)), 8).route_http(route);
 
 }
 
+fn route(http_line: (&str, &str), head: HashMap<&str, &str>, body: &str) -> (Vec<u8>, bool) {
 
-fn route_pro(buffer: Vec<u8>) -> (Vec<u8>, bool) {
+    let val = if body.is_empty() {
+        format!("Http Line: {:?}\r\nHead: {:#?}\r\n", http_line, head)
+    } else {
+        format!(
+            "Http Line: {:?}\r\nHead: {:#?}\r\nBody: {}\r\n",
+            http_line, head, body
+        )
+    };
 
-    let mut buf = Vec::from(
+    let mut buf = Vec::from(format!(
         "HTTP/1.1 200 OK\r\n\
-        Content-Type: text/plain; charset=utf-8\r\n\r\n"
-    );
-    buf.extend(buffer);
-    return (buf, false)
+        Content-Type: text/plain; charset=utf-8\r\n\
+        Content-Length: {}\r\n\r\n", val.len()
+    ));
+
+    buf.extend(Vec::from(val));
+
+    // if let Some(live) = head.get("Connection") {
+    //     if live == &"Keep-Alive" {
+    //         return (buf, true);
+    //     };
+    // };
+
+    (buf, false)
 
 }
-
-
-
-
-// fn route(http_line: (&str, &str), head: HashMap<&str, &str>, body: &str) -> (Vec<u8>, bool) {
-
-//     if let Some(x) = head.get("Connection") {
-//         println!("Keep-Alive: {}", x);
-//     };
-
-//     let val = if body.is_empty() {
-//         format!("Http Line: {:?}\r\nHead: {:#?}\r\n", http_line, head)
-//     } else {
-//         format!("Http Line: {:?}\r\nHead: {:#?}\r\nBody: {}\r\n", http_line, head, body)
-//     };
-
-//     let mut buf = Vec::from(
-//         "HTTP/1.1 200 OK\r\n\
-//         Content-Type: text/plain; charset=utf-8\r\n\r\n"
-//     );
-//     buf.extend(Vec::from(val));
-//     return (buf, false)
-// }
