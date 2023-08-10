@@ -6,7 +6,7 @@ use std::env::var;
 
 fn main() {
 
-    let port = var("PORT").expect("$PORT Not Found").parse();
+    let port = var("PORT").unwrap_or(String::from("8888")).parse();
     SalServer::new(("0.0.0.0", port.unwrap_or(8888)), 8).route_http(route);
 
 }
@@ -30,12 +30,12 @@ fn route(http_line: (&str, &str), head: HashMap<&str, &str>, body: &str) -> (Vec
 
     buf.extend(Vec::from(val));
 
-    // if let Some(live) = head.get("Connection") {
-    //     if live == &"Keep-Alive" {
-    //         return (buf, true);
-    //     };
-    // };
+    if let Some(live) = head.get("Connection") {
+        if live == &"close" {
+            return (buf, false);
+        };
+    };
 
-    (buf, false)
+    (buf, true)
 
 }
